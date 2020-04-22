@@ -37,7 +37,7 @@ def connectTCPClient(hostip,portNumber):
             print('connected')
             return True
         except Exception as e:
-            print ('Not Connected')
+            print ('Not Connected'+ e)
             return False
 
 def sendStr(cmd,event=None):  # event is passed by binders.
@@ -144,7 +144,7 @@ class App(tk.Tk):
                 strHex+='0A'
             elif appendOp=="CTRL+Z":
                 print("Append :CTRL+Z")
-                strHex+='1A'
+            strHex+='1A'
             sendbyte(strHex)
           else:
             strstr=self.data.get()
@@ -195,10 +195,14 @@ def setting_Popup():
         HOST=ipStr.get()
         PORT=int(portStr.get())
         if connectTCPClient(HOST,PORT):
-            connectionStatusLable.configure(text='Connected')
+            connectionStatusLable.configure(text='Status: Connected')
+            connectedTostr = 'Conneted to: '+HOST+':'+str(PORT)
+            connectedToLable.configure(text=connectedTostr)
             win.destroy()
         else:
-            connectionStatusLable.configure(text='Not Connected')
+            connectionStatusLable.configure(text='Status: Not Connected')
+            connectedTostr = 'Conneted to: Not Connected'
+            connectedToLable.configure(text=connectedTostr)
             
         
 
@@ -225,15 +229,21 @@ def setting_Popup():
             showTcpServerWidget()
         else:
             print('Err')
-    
+
+    def on_win_closing():
+        if connectionStatusLable['text']=='Status: Connected':
+            win.destroy()
+        else:
+            root.destroy()
     
     s.trace('w', changed)
     btn1 = tk.Button(win, text="Connect", command=connect)
     btn1.grid(row=5,column=1)
-    btn3 = tk.Button(win, text="Quit", command=lambda:[f() for f in[win.destroy, on_closing]])
+    btn3 = tk.Button(win, text="Quit", command= on_closing)
     btn3.grid(row=6,column=1)
     win.transient(root) #set to be on top of the main window
     win.grab_set() #hijack all commands from the master (clicks on the main window are ignored)
+    win.protocol("WM_DELETE_WINDOW", on_win_closing)
     root.wait_window(win) #pause anything on the main window until this one closes (optional)
 
 def about_window():
@@ -253,9 +263,18 @@ def about_window():
 root = tk.Tk()
 root.title('NIDAAS Multiprotocol App')
 scriptFrame = tk.Frame(root)
-messages_frame = ttk.Frame(root)
-scriptUpperFrame = ttk.Frame(scriptFrame)
-scriptDownFrame = ttk.Frame(scriptFrame)
+messages_frame = tk.Frame(root)
+scriptUpperFrame = tk.Frame(scriptFrame)
+scriptDownFrame = tk.Frame(scriptFrame)
+scriptDownFrame2=tk.Frame(scriptFrame,highlightbackground="black", highlightthickness=1)
+rxLbaleFrame=tk.Frame(messages_frame)
+rxLable=tk.Label(rxLbaleFrame,text='Receive Window')
+connectionStatusLable = tk.Label(rxLbaleFrame, text = "Status: Not Connected")
+#rxLable.pack(side=tk.LEFT,fill='x')
+#connectionStatusLable.pack(side=tk.LEFT,fill='x',padx=60) 
+rxLable.grid(row=0, column=0, padx=(10, 280))
+connectionStatusLable.grid(row=0, column=0, padx=(250, 10))
+rxLbaleFrame.pack(side=tk.TOP)
 scrollbar = ttk.Scrollbar(messages_frame,orient=tk.VERTICAL)  # To navigate through past messages.
 # Following will contain the messages.
 global msg_list 
@@ -292,16 +311,23 @@ scriptLoopUI=tk.Checkbutton(scriptDownFrame, text="Loop", variable=scriptLoop)
 #scriptLoopUI.pack(side='left',padx=100,fill='x')
 runScript = tk.Button(scriptDownFrame,text="Run Script",command=lambda:scriptRun(0))
 #runScript.pack(side='left',padx=5)
-settingButton = tk.Button(scriptDownFrame, text="Setting", command=setting_Popup)
-connectionStatusLable = tk.Label(scriptDownFrame, text = "Not Connected")
-
 scriptLoopUI.grid(row=0, column=1, padx=(200, 10),pady=(20,10))
 runScript.grid(row=0, column=2, padx=(10, 100),pady=(20,10)) 
-connectionStatusLable.grid(row=1,column=1) 
-settingButton.grid(row=1, column=2)
+
 scriptDownFrame.pack(side=tk.TOP,fill=tk.BOTH)
 
+
+connectedToLable=tk.Label(scriptDownFrame2)
+connectedToLable.configure(text='Conneted to: Not Connected')
+settingButton = tk.Button(scriptDownFrame2, text="Setting", command=setting_Popup)
+
+connectedToLable.grid(row=0, column=0, padx=(10, 200))
+settingButton.grid(row=0, column=0,padx=(400,10))
+
+scriptDownFrame2.pack(side=tk.TOP,fill=tk.BOTH,pady=20)
+
 scriptFrame.pack(side=tk.RIGHT,fill=tk.BOTH)
+
 menu = tk.Menu(root)
 root.config(menu=menu)
 
