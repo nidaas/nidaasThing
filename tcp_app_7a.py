@@ -31,7 +31,7 @@ class TCPClient():
 
     def connect(self,ipAddress,portNumber):
         if self.signal==self.CONNECTED:
-            self.delete()
+            self.reinitilize()
         print(ipAddress + ':' +str(portNumber))
         self.ip=ipAddress
         self.port=portNumber
@@ -85,10 +85,14 @@ class TCPClient():
     def close(self):
         self.signal = self.SIG_DISCONNECT
 
-    def delete(self):
+    def reinitilize(self):
         self.tcp_socket.close()
         del(self.tcp_socket)
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def disconnect():
+        self.tcp_socket.close()
+        del(self.tcp_socket)
 
 
 
